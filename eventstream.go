@@ -75,12 +75,16 @@ type Event struct {
 
 // BrokerConfig is custom configuration for message broker
 type BrokerConfig struct {
-	StrictValidation bool
-	CACertFile       string
-	DialTimeout      time.Duration
-	ReadTimeout      time.Duration
-	WriteTimeout     time.Duration
-	Balancer         kafka.Balancer
+	StrictValidation   bool
+	CACertFile         string
+	DialTimeout        time.Duration
+	ReadTimeout        time.Duration
+	WriteTimeout       time.Duration
+	Balancer           kafka.Balancer
+	SecurityProtocol   string
+	SSLKeystorePath    string
+	SSLKeystoreKeyPath string
+	SSLTruststorePath  string
 }
 
 // PublishBuilder defines the structure of message which is sent through message broker

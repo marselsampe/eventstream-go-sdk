@@ -19,10 +19,13 @@ package eventstream
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"sync"
 	"time"
 
@@ -86,26 +89,40 @@ func setConfig(writerConfig *kafka.WriterConfig, readerConfig *kafka.ReaderConfi
 		readerConfig.Dialer = dialer
 	}
 
-	if config.CACertFile != "" {
+	if config.SecurityProtocol == "SSL" {
 		logrus.Debug("set TLS certificate")
 
-		cert, err := GetTLSCertFromFile(config.CACertFile)
-		if err != nil {
-			logrus.Error(err, "unable to get TLS certificate")
-			return err
-		}
-
-		tlsConfig := &tls.Config{
-			Certificates: []tls.Certificate{*cert},
-		}
-
-		dialer.TLS = tlsConfig
+		dialer.TLS = newTLSConfig(config.SSLKeystorePath,
+			config.SSLKeystoreKeyPath,
+			config.SSLTruststorePath)
 
 		writerConfig.Dialer = dialer
 		readerConfig.Dialer = dialer
 	}
 
 	return nil
+}
+
+func newTLSConfig(clientCertFile, clientKeyFile, caCertFile string) *tls.Config {
+	tlsConfig := tls.Config{}
+
+	// Load client cert
+	cert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	tlsConfig.Certificates = []tls.Certificate{cert}
+
+	// Load CA cert
+	caCert, err := ioutil.ReadFile(caCertFile)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	tlsConfig.RootCAs = caCertPool
+
+	return &tlsConfig
 }
 
 // newKafkaClient create a new instance of KafkaClient
