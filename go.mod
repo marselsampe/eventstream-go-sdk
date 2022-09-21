@@ -1,4 +1,4 @@
-module github.com/AccelByte/eventstream-go-sdk/v3
+module github.com/marselsampe/eventstream-go-sdk/v3
 
 go 1.17
 
